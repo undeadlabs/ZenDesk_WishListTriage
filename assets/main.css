@@ -1,0 +1,31 @@
+/* Copyright (c) Undead Labs LLC. All rights reserved. */
+
+body {
+    padding: 1rem;
+}
+
+form {
+    width: fit-content;
+}
+
+fieldset {
+    border: 1px solid black;
+    padding: 7px;
+}
+
+legend {
+    padding: 0 0.5rem;
+}
+
+input[type=date] {
+    text-align: end;
+}
+
+input[type=number] {
+    text-align: end;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}

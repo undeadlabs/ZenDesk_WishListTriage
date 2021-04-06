@@ -1,0 +1,17 @@
+{
+  "name": "Wish List Triage",
+  "author": {
+    "name": "Ian Good",
+    "email": "ian.good@undeadlabs.com",
+    "url": "http://www.nope.com/dummy"
+  },
+  "defaultLocale": "en",
+  "private": true,
+  "location": {
+    "support": {
+      "nav_bar": "assets/iframe.html"
+    }
+  },
+  "version": "1.0",
+  "frameworkVersion": "2.0"
+}

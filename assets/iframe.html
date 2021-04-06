@@ -1,0 +1,90 @@
+<!-- Copyright (c) Undead Labs LLC. All rights reserved. -->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <!--   See Using Zendesk Garden:
+    https://developer.zendesk.com/apps/docs/developer-guide/setup#using-zendesk-garden
+    https://garden.zendesk.com/css-components/bedrock/
+    https://garden.zendesk.com/css-components/utilities/typography/
+   -->
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/combine/npm/@zendeskgarden/css-bedrock@7.0.21,npm/@zendeskgarden/css-utilities@4.3.0">
+  <link href="main.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <form>
+    <fieldset>
+      <legend>Find Posts...</legend>
+      <lu>
+        <li>
+          <label for="myDate">older than</label>
+          <input type="date" id="dateInput">
+        </li>
+        <li>
+          <label for="voteSumInput">with fewer votes than</label>
+          <input type="number" id="voteSumInput" name="votes" min="1">
+        </li>
+        <input type="button" value="Search" onclick="searchButton_OnClick()">
+      </lu>
+    </fieldset>
+  </form>
+
+  <div id="content"></div>
+
+  <script id="error-template" type="text/x-handlebars-template">
+    <p>{{status}} - {{statusText}} error.</p>
+    <p>{{error.title}}</p>
+    <p>{{error.message}}</p>
+  </script>
+
+  <script id="searchprogress-template" type="text/x-handlebars-template">
+    <p>{{text}}</p>
+    <progress id="searching" value="{{value}}" max="{{max}}">{{value}}%</progress>
+  </script>
+
+  <script id="myposts-template" type="text/x-handlebars-template">
+    {{#if posts}}
+      <p>{{posts.length}} results.</p>
+      <div>
+        Click
+        <input type="button" value="here" onclick="movePostsButton_OnClick()">
+        to move them all.
+    </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Created</th>
+            <th>Updated</th>
+            <th>Votes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each posts}}
+            <tr>
+              <td><a href="{{html_url}}" target="_blank">{{title}}</a></td>
+              <td>{{created_at_datestr}}</td>
+              <td>{{updated_at_datestr}}</td>
+              <td>{{vote_sum}}</td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    {{else}}
+      <p>No results.</p>
+    {{/if}}
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/handlebars@4.3.3/dist/handlebars.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+  <script src="https://static.zdassets.com/zendesk_app_framework_sdk/2.0/zaf_sdk.min.js"></script>
+  <script src="main.js"></script>
+
+</body>
+
+</html>
