@@ -1,8 +1,8 @@
 {
   "app": {
-    "name": "Zen Tunes",
-    "short_description": "Play the famous zen tunes in your help desk.",
-    "long_description": "Play the famous zen tunes in your help desk and \n listen to the beats it has to offer.",
+    "name": "Wish List Triage",
+    "short_description": "Searches the community Wish List and archives posts.",
+    "long_description": "Allows an agent to find posts based on age and number of votes and then move them all to the Wish List Archive.",
     "installation_instructions": "Simply click install."
   }
 }
