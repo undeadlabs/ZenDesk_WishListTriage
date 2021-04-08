@@ -17,9 +17,40 @@
 
 <body>
 
+  <fieldset>
+    <legend>About</legend>
+    This app can be used to move posts from the
+    <a href="https://support.stateofdecay.com/hc/en-us/community/topics/360000459952" target="_blank">
+      community Wish List</a>
+    to the
+    <a href="https://support.stateofdecay.com/hc/en-us/community/topics/360001667252" target="_blank">
+      Wish List Archive</a>.
+    <br>
+    It works by searching the Wish List topic for posts older than the specified date.
+    <br>
+    This returns a <em>maximum</em> of 1,000 results (a limit imposed by the ZenDesk API).
+    <br>
+    Those results are then filtered by the specified number of votes.
+    <br>
+    <br>
+    The remaining posts can be moved to the archive using the button that appears when the search is complete.
+    <br>
+    <br>
+    Posts are updated one at a time (a ZenDesk API limitation).
+    <br>
+    According to the
+    <a href="https://developer.zendesk.com/rest_api/docs/help_center/introduction#rate-limits" target="_blank">
+      ZenDesk documentation</a>,
+    it's possible that using this app will result in a "Too Many Requests" response.
+    <br>
+    If this happens, then wait a minute &amp; try again I guess?
+  </fieldset>
+
+  <br>
+
   <form>
     <fieldset>
-      <legend>Find Posts...</legend>
+      <legend>Find Wish List Posts...</legend>
       <lu>
         <li>
           <label for="myDate">older than</label>
@@ -34,10 +65,17 @@
     </fieldset>
   </form>
 
+  <br>
+
   <div id="content"></div>
 
   <script id="error-template" type="text/x-handlebars-template">
-    <p>{{status}} - {{statusText}} error.</p>
+    {{#if numPostsUpdated}}
+      <p>Posts updated: {{numPostsUpdated}}.</p>
+      <br>
+    {{/if}}
+    <p>An error has occured.</p>
+    <p>{{status}} - {{statusText}}</p>
     <p>{{error.title}}</p>
     <p>{{error.message}}</p>
   </script>
@@ -47,14 +85,17 @@
     <progress id="searching" value="{{value}}" max="{{max}}">{{value}}%</progress>
   </script>
 
-  <script id="myposts-template" type="text/x-handlebars-template">
+  <script id="searchresults-template" type="text/x-handlebars-template">
     {{#if posts}}
       <p>{{posts.length}} results.</p>
       <div>
         Click
         <input type="button" value="here" onclick="movePostsButton_OnClick()">
-        to move them all.
-    </div>
+        to move them all from the wish list to the archive.
+        <br>
+        This may take a while &amp; you must stay on this page in order for it to process all items.
+      </div>
+      <br>
       <table>
         <thead>
           <tr>

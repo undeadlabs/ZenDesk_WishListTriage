@@ -1,14 +1,3 @@
-# App name
+# Wish List Triage (SoD2)
 
-[brief description of the app]
-
-### The following information is displayed:
-
-* info1
-* info2
-* info3
-
-Please submit bug reports to [Insert Link](). Pull requests are welcome.
-
-### Screenshot(s):
-[put your screenshots down here.]
+Searches the SoD2 community [Wish List](https://support.stateofdecay.com/hc/en-us/community/topics/360000459952) so results can be moved to the [Wish List Archive](https://support.stateofdecay.com/hc/en-us/community/topics/360001667252).

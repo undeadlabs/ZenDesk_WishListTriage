@@ -1,25 +1,39 @@
 /*! Copyright (c) Undead Labs LLC. All rights reserved. */
 
+// ZenDesk recommends using strings for IDs
+// https://developer.zendesk.com/rest_api/docs/help_center/introduction#data-types
+const wishListTopicId = "360000459952";
+const archiveTopicId = "360001667252";
+
 var client = "Client has not been initialized!";
+var searchResultsPosts = [];
+var numPostsUpdated = 0;
 
 $(function () {
     client = ZAFClient.init();
+    searchResultsPosts = [];
 
+    // Default the input date to 3 months ago.
     const initialDate = new Date(Date.now());
     initialDate.setMonth(initialDate.getMonth() - 3);
     const dateInput = document.getElementById("dateInput");
     dateInput.value = initialDate.toISOString().split("T")[0];
 
+    // Default the input vote sum to 50.
     const voteSumInput = document.getElementById("voteSumInput");
     voteSumInput.value = 50;
 
     showPosts([]);
 });
 
-function getTopicPosts(topicId, page, postsPerPage) {
-    console.log(`Requesting page ${page}...`);
+function searchTopicPosts(topicId, createdBefore, page, postsPerPage) {
+    console.log(`Requesting search page ${page}...`);
+
+    // Search posts...
+    // https://developer.zendesk.com/rest_api/docs/help_center/search#search-posts
+    const q = '""'; // empty query (should match any post)
     return client.request({
-        url: `/api/v2/community/topics/${topicId}/posts.json?page=${page}&per_page=${postsPerPage}&sort_by=created_at`,
+        url: `/api/v2/help_center/community_posts/search.json?topic=${topicId}&created_before=${createdBefore}&page=${page}&per_page=${postsPerPage}&query=${q}&sort_by=created_at&sort_order=asc`,
         type: "GET",
         dataType: "json",
     });
@@ -28,54 +42,41 @@ function getTopicPosts(topicId, page, postsPerPage) {
 async function requestPosts(topicId) {
     $("#content").html("Searching...");
 
+    // Reset the collection of results so we don't end up with stale or duplcated posts.
+    searchResultsPosts = [];
+    numPostsUpdated = 0;
+
     const dateInput = document.getElementById("dateInput");
-    const dateThreshold = new Date(dateInput.value);
+    const createdBefore = dateInput.value.split("T")[0];
 
     const voteSumInput = document.getElementById("voteSumInput");
     const voteSumThreshold = voteSumInput.value;
 
-    const showThesePosts = [];
+    const postsPerPage = 100; // Last time I tested, 100 was the maximum allowed.
+    for (let page = 1, numPages = 1; page <= numPages; ++page) {
+        showProgress(`Searching pages (${page}/${numPages})...`, page, numPages);
 
-    const postsPerPage = 200;
+        const response = await searchTopicPosts(topicId, createdBefore, page, postsPerPage);
+        console.log(response);
 
-    const starterQuery = await getTopicPosts(topicId, 1, postsPerPage);
-    const numPages = starterQuery.page_count;
-    // Starting on the last page, get posts & filter out the ones we want.
-    for (let page = numPages; page > 0; --page) {
-        const progress = (numPages - page) + 1;
-        showProgress(`Processing pages (${progress}/${numPages})...`, progress, numPages);
+        // Update the actual number of pages now that we've gotten a response.
+        numPages = response.page_count;
 
-        const data = await getTopicPosts(topicId, page, postsPerPage);
-        console.log(data);
-
-        let stopFetching = false;
-
-        data.posts.forEach(p => {
-            // If this post is newer than we care about, then we don't need to check any more pages;
-            // otherwise, if it's not pinned & has fewer votes than the threshold, add it to the collection.
-            const createdAt = new Date(p.created_at);
-            if (createdAt > dateThreshold) {
-                stopFetching = true;
-            }
-            else if (p.pinned === false && p.vote_sum < voteSumThreshold) {
-                p.created_at_date = createdAt;
+        // Pick out the posts we care about.
+        response.results.forEach(p => {
+            if (p.featured === false &&
+                p.status === "none" &&
+                p.vote_sum < voteSumThreshold) {
+                // While we're here - generate date strings to show in the results table.
                 p.created_at_datestr = formatDate(p.created_at);
                 p.updated_at_datestr = formatDate(p.updated_at);
-                showThesePosts.push(p);
+
+                searchResultsPosts.push(p);
             }
-
         });
-
-        if (stopFetching) {
-            break;
-        }
     }
 
-    showThesePosts.sort((a, b) => a.created_at_date < b.created_at_date);
-
-    //360001667252
-
-    showPosts(showThesePosts);
+    showPosts(searchResultsPosts);
 }
 
 function formatDate(dateStr) {
@@ -92,8 +93,14 @@ function showError(response) {
     const error_data = {
         status: response.status,
         statusText: response.statusText,
-        error: response.responseJSON.error,
+        error: response.responseJSON?.error ??
+        {
+            title: "no error title",
+            message: "no error message",
+        },
+        numPostsUpdated,
     };
+
     const source = $("#error-template").html();
     const template = Handlebars.compile(source);
     const html = template(error_data);
@@ -108,7 +115,7 @@ function showProgress(text, value, max) {
 }
 
 function showPosts(posts) {
-    const source = $("#myposts-template").html();
+    const source = $("#searchresults-template").html();
     const template = Handlebars.compile(source);
     const html = template({ posts });
     $("#content").html(html);
@@ -117,14 +124,52 @@ function showPosts(posts) {
 function searchButton_OnClick() {
     console.log("Searching...");
 
-    // Gets posts from "360000459952-Wish-List"
-    requestPosts("360000459952")
+    requestPosts(wishListTopicId)
         .catch((exception) => {
             console.error(exception);
             showError(exception);
         });
 }
 
+async function updatePost(post) {
+    console.log(`Updating post ${post.id}...`);
+
+    // Update the post with the archive topic ID.
+    // https://developer.zendesk.com/rest_api/docs/help_center/posts#update-post
+    const payload = {
+        post: {
+            topic_id: archiveTopicId,
+        }
+    };
+
+    const response = await client.request({
+        url: `https://undeadlabs.zendesk.com/api/v2/community/posts/${post.id}.json`,
+        type: "PUT",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+    });
+
+    //console.log(response);
+
+    return response;
+}
+
+async function updatePosts(posts) {
+    numPostsUpdated = 0;
+    const numPosts = posts.length;
+    for (let i = 0; i < numPosts; ++i) {
+        numPostsUpdated = i + 1;
+        showProgress(`Updating posts (${numPostsUpdated}/${numPosts})...`, numPostsUpdated, numPosts);
+        await updatePost(posts[i]);
+    }
+
+    showProgress(`Update completed (${numPosts}).`, numPosts, numPosts);
+}
+
 function movePostsButton_OnClick() {
-    console.log("!!!!!");
+    updatePosts(searchResultsPosts)
+        .catch((exception) => {
+            console.error(exception);
+            showError(exception);
+        });
 }
