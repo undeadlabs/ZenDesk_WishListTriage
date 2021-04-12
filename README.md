@@ -1,4 +1,4 @@
-# Zendesk Wish List Triage app
+# ![Logo](app/assets/logo-small.png)&nbsp;Zendesk Wish List Triage app
 
 This is a [Zendesk app](https://develop.zendesk.com/hc/en-us/categories/360000003408) for managing the Wish List on the [SoD2 community](https://support.stateofdecay.com/hc/en-us/community/topics) site.
 
